@@ -9,6 +9,7 @@
 #include "db_parser.h"
 #include "product_parser.h"
 #include "util.h"
+#include "mydatastore.h"
 
 using namespace std;
 struct ProdNameSorter {
@@ -29,7 +30,7 @@ int main(int argc, char* argv[])
      * Declare your derived DataStore object here replacing
      *  DataStore type to your derived type
      ****************/
-    DataStore ds;
+    MyDataStore ds;
 
 
 
@@ -70,6 +71,7 @@ int main(int argc, char* argv[])
         stringstream ss(line);
         string cmd;
         if((ss >> cmd)) {
+						// AND command
             if( cmd == "AND") {
                 string term;
                 vector<string> terms;
@@ -80,6 +82,7 @@ int main(int argc, char* argv[])
                 hits = ds.search(terms, 0);
                 displayProducts(hits);
             }
+						// OR command
             else if ( cmd == "OR" ) {
                 string term;
                 vector<string> terms;
@@ -90,6 +93,7 @@ int main(int argc, char* argv[])
                 hits = ds.search(terms, 1);
                 displayProducts(hits);
             }
+						// QUIT command
             else if ( cmd == "QUIT") {
                 string filename;
                 if(ss >> filename) {
@@ -100,10 +104,42 @@ int main(int argc, char* argv[])
                 done = true;
             }
 	    /* Add support for other commands here */
+						// VIEW cart
+						else if (cmd == "VIEWCART"){
+							string uname;
+							// check if goes through
+							if (ss >> uname){
+								uname = convToLower(uname);
+								ds.viewCart(uname);
+							}
+						}
+						// BUY cart
+						else if (cmd == "BUYCART"){
+							string uname;
+							if (ss >> uname){
+								uname = convToLower(uname);
+								ds.buyCart(uname);
+							}
+						}
+						// ADD
+						else if (cmd == "ADD"){
+							size_t hits_num;
+							string uname;
 
-
-
-
+							if (ss >> uname && ss >> hits_num){
+								uname = convToLower(uname);
+								// checks if in bounds
+								if (hits_num > 0 && hits_num <= hits.size()){
+									Product* tempHits = hits[hits_num - 1];
+									ds.addToCart(uname, tempHits);
+								}
+								// if not in bounds, print out invalid
+								else{
+									cout << "Invalid" << endl;
+								}
+							}
+							
+						}
             else {
                 cout << "Unknown command" << endl;
             }
